@@ -20,7 +20,10 @@
   },
   "homepage": "https://github.com/mxaba/twitter-clone#readme",
   "dependencies": {
-    "fastify": "^4.26.0"
+    "@fastify/jwt": "^8.0.0",
+    "@fastify/postgres": "^5.2.2",
+    "fastify": "^4.26.0",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
