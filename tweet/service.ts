@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
 class Tweet extends Model {
   public id!: string;
@@ -33,21 +33,22 @@ class Tweet extends Model {
 }
 
 class TweetService {
-  private tweetModel: typeof Tweet;
+  private sequelize: Sequelize;
 
-  constructor(tweetModel: typeof Tweet) {
-    this.tweetModel = tweetModel;
+  constructor(sequelize: Sequelize) {
+    this.sequelize = sequelize;
+    Tweet.initialize(this.sequelize);
   }
 
   async fetchTweets(userIds: string[]) {
-    return this.tweetModel.findAll({
+    return Tweet.findAll({
       where: { userId: userIds },
       order: [['createdAt', 'DESC']],
     });
   }
 
   async addTweet(user: string, text: string) {
-    return this.tweetModel.create({ userId: user, text });
+    return Tweet.create({ userId: user, text });
   }
 }
 

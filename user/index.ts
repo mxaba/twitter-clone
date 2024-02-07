@@ -1,8 +1,8 @@
 import { FastifyPluginCallback, FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
-import { errors } from 'errors';
 import { UserService } from './service';
 import { getProfile, login, registration, search } from './models';
 import { RouteHandlerMethod } from 'fastify';
+import { errors } from '../errors';
 
 interface CustomRequest<Body = any, Params = any, Query = any> extends FastifyRequest {
     body: Body;

@@ -4,6 +4,9 @@ import { Sequelize } from 'sequelize-typescript';
 import userPlugin from './user';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
+import { UserService } from './user/service';
+import { TweetService } from './tweet/service';
+import { DataTypes } from 'sequelize';
 
 
 const swaggerOption = {
@@ -76,7 +79,28 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
     });
     const sequelize = fastify.sequelize;
 
-    // sequelize.addModels([User]);
+    const User = sequelize.define('User', {
+        username: DataTypes.STRING,
+        email: DataTypes.STRING,
+        password: DataTypes.STRING,
+    });
+
+    const Tweet = sequelize.define('Tweet', {
+        content: DataTypes.STRING,
+        userId: DataTypes.INTEGER,
+    });
+
+    // Define associations (relationships) between models
+    User.hasMany(Tweet);
+    Tweet.belongsTo(User);
+
+    await sequelize.sync();
+
+    const userService = new UserService(sequelize);
+    fastify.decorate('userService', userService);
+
+    const tweetService = new TweetService(sequelize);
+    fastify.decorate('tweetService', tweetService);
 
     // Create tables if they do not exist
     await sequelize.sync({ force: false });
@@ -89,7 +113,7 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
         }
     });
 
-    // UserService, TweetService, FollowService, and TimelineService instantiation
+    //  TimelineService instantiation
 
 }
 

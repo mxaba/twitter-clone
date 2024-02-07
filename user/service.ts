@@ -1,4 +1,4 @@
-import { errors } from 'errors';
+import { errors } from '../errors';
 import { Model, Sequelize, DataTypes, Op } from 'sequelize';
 
 interface UserAttributes {
