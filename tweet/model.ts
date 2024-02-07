@@ -1,32 +1,14 @@
 import { DataTypes, Model } from 'sequelize';
 
-class Tweet extends Model {
-  public id!: string;
-  public userId!: string;
-  public text!: string;
-
-  static initialize(sequelize: any) {
-    return this.init({
-      id: {
-        type: DataTypes.STRING,
-        primaryKey: true,
-      },
-      userId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      text: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          len: [1, 144],
+const tweet = {
+    body: {
+        type: 'object',
+        required: [ 'text' ],
+        properties: {
+          text: { type: 'string', minLength: 1, maxLength: 144 }
         },
-      },
-    }, {
-      sequelize,
-      modelName: 'Tweet',
-    });
-  }
+        additionalProperties: false
+      }
 }
 
 const getUserTweetsModel = {
@@ -72,4 +54,4 @@ const getTweetsModel = {
   },
 };
 
-export { Tweet, getUserTweetsModel, getTweetsModel };
+export { tweet, getUserTweetsModel, getTweetsModel };
