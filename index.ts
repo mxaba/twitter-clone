@@ -1,4 +1,3 @@
-import path from 'path';
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import { Sequelize } from 'sequelize-typescript';
@@ -25,7 +24,6 @@ interface Config {
     POSTGRES_URL: string;
     REDIS_URL: string;
     JWT_SECRET: string;
-    // Add other configuration properties if needed
 }
 
 declare module 'fastify' {
@@ -79,8 +77,7 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
     });
     const sequelize = fastify.sequelize;
 
-    // Assuming User, TweetService, FollowService, and TimelineService are defined elsewhere
-    sequelize.addModels([User]);
+    // sequelize.addModels([User]);
 
     // Create tables if they do not exist
     await sequelize.sync({ force: false });
