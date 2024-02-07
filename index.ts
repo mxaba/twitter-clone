@@ -53,10 +53,6 @@ const schema: Schema = {
     additionalProperties: false
 };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 197fc97811fa021edf8718a0ffde967deac39a73
 async function connectToDatabases(fastify: FastifyInstance) {
     const sequelize = new Sequelize(fastify.config.POSTGRES_URL, {
         dialect: 'postgres',
