@@ -26,8 +26,6 @@ const pluginMeta = {
 };
 
 const plugin: FastifyPluginCallback = async (fastify, opts) => {
-    //   fastify.addHook('preHandler', fastify.authPreHandler);
-
     fastify.post('/', { schema: tweet }, addTwitterHandler);
     fastify.get('/', { schema: getUserTweetsModel }, getTwitterHandler);
     fastify.get('/:userIds', { schema: getTweetsModel }, getUserTweetsHandler);
@@ -39,8 +37,8 @@ Object.defineProperty(plugin, Symbol.for('plugin-meta'), {
 
 const addTwitterHandler: RouteHandlerMethod = async (req, reply) => {
     const request = req as CustomRequest;
-    const { text } = request.body;
-    await request.tweetService.addTweet(request.user._id, text);
+    const { text, tags } = request.body; 
+    await request.tweetService.addTweet(request.user._id, text, tags);
     reply.code(204);
 };
 
