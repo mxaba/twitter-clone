@@ -8,6 +8,8 @@ import { UserService } from './user/service';
 import { TweetService } from './tweet/service';
 import { DataTypes } from 'sequelize';
 import { Redis } from 'ioredis';
+import FollowService from './follow/servers';
+import TimelineService from './timeline/server';
 
 
 const swaggerOption = {
@@ -111,6 +113,12 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
 
     const tweetService = new TweetService(sequelize);
     fastify.decorate('tweetService', tweetService);
+
+    const followService = new FollowService(fastify);
+    fastify.decorate('followService', followService);
+
+    const timelineService = new TimelineService(followService, tweetService);
+    fastify.decorate('timelineService', timelineService);
 
     // Create tables if they do not exist
     await sequelize.sync({ force: false });
