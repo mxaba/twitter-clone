@@ -7,6 +7,7 @@ import fastifyJwt from '@fastify/jwt';
 import { UserService } from './user/service';
 import { TweetService } from './tweet/service';
 import { DataTypes } from 'sequelize';
+import { Redis } from 'ioredis';
 
 
 const swaggerOption = {
@@ -33,6 +34,7 @@ declare module 'fastify' {
     interface FastifyInstance {
         config: Config;
         sequelize: Sequelize;
+        redis: Redis;
     }
 }
 
@@ -56,6 +58,11 @@ const schema: Schema = {
     additionalProperties: false
 };
 
+async function connectToRedis(fastify: FastifyInstance) {
+    const redis = new Redis(fastify.config.REDIS_URL);
+    fastify.decorate('redis', redis);
+}
+
 async function connectToDatabases(fastify: FastifyInstance) {
     const sequelize = new Sequelize(fastify.config.POSTGRES_URL, {
         dialect: 'postgres',
@@ -74,6 +81,9 @@ async function authenticator(fastify: FastifyInstance) {
 }
 
 async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> {
+
+    await fastify.register(connectToRedis);
+
     fastify.register(fastifyJwt, {
         secret: 'your-secret-key'
     });
