@@ -5,7 +5,7 @@ const tweet = {
         type: 'object',
         required: [ 'text' ],
         properties: {
-          text: { type: 'string', minLength: 1, maxLength: 144 }
+          text: { type: DataTypes.STRING, minLength: 1, maxLength: 144 }
         },
         additionalProperties: false
       }
@@ -17,7 +17,7 @@ const getUserTweetsModel = {
     required: ['userIds'],
     properties: {
       userIds: {
-        type: 'string',
+        type: DataTypes.STRING,
         pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})?',
       },
     },
@@ -29,9 +29,9 @@ const getUserTweetsModel = {
       items: {
         type: 'object',
         properties: {
-          id: { type: 'string' },
-          userId: { type: 'string' },
-          text: { type: 'string' },
+          id: { type: DataTypes.STRING },
+          userId: { type: DataTypes.STRING },
+          text: { type: DataTypes.STRING },
         },
       },
     },
@@ -45,9 +45,9 @@ const getTweetsModel = {
       items: {
         type: 'object',
         properties: {
-          id: { type: 'string' },
-          userId: { type: 'string' },
-          text: { type: 'string' },
+          id: { type: DataTypes.STRING },
+          userId: { type: DataTypes.STRING },
+          text: { type: DataTypes.STRING },
         },
       },
     },

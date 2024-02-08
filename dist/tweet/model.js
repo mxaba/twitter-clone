@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTweetsModel = exports.getUserTweetsModel = exports.tweet = void 0;
+const sequelize_1 = require("sequelize");
 const tweet = {
     body: {
         type: 'object',
         required: ['text'],
         properties: {
-            text: { type: 'string', minLength: 1, maxLength: 144 }
+            text: { type: sequelize_1.DataTypes.STRING, minLength: 1, maxLength: 144 }
         },
         additionalProperties: false
     }
@@ -18,7 +19,7 @@ const getUserTweetsModel = {
         required: ['userIds'],
         properties: {
             userIds: {
-                type: 'string',
+                type: sequelize_1.DataTypes.STRING,
                 pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})?',
             },
         },
@@ -30,9 +31,9 @@ const getUserTweetsModel = {
             items: {
                 type: 'object',
                 properties: {
-                    id: { type: 'string' },
-                    userId: { type: 'string' },
-                    text: { type: 'string' },
+                    id: { type: sequelize_1.DataTypes.STRING },
+                    userId: { type: sequelize_1.DataTypes.STRING },
+                    text: { type: sequelize_1.DataTypes.STRING },
                 },
             },
         },
@@ -46,9 +47,9 @@ const getTweetsModel = {
             items: {
                 type: 'object',
                 properties: {
-                    id: { type: 'string' },
-                    userId: { type: 'string' },
-                    text: { type: 'string' },
+                    id: { type: sequelize_1.DataTypes.STRING },
+                    userId: { type: sequelize_1.DataTypes.STRING },
+                    text: { type: sequelize_1.DataTypes.STRING },
                 },
             },
         },
