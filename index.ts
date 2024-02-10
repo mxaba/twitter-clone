@@ -15,7 +15,7 @@ interface Config {
     SQLITE_PATH: string;
     REDIS_URL: string;
     JWT_SECRET: string;
-    PORT: string | number; // Add PORT to Config
+    PORT: string | number;
 }
 
 declare module 'fastify' {
@@ -37,12 +37,12 @@ interface Schema {
 
 const schema: Schema = {
     type: 'object',
-    required: ['SQLITE_PATH', 'REDIS_URL', 'JWT_SECRET', 'PORT'], // Add PORT to required fields
+    required: ['SQLITE_PATH', 'REDIS_URL', 'JWT_SECRET', 'PORT'],
     properties: {
         SQLITE_PATH: { type: 'string' },
         REDIS_URL: { type: 'string' },
         JWT_SECRET: { type: 'string' },
-        PORT: { type: 'number' } // PORT can be either string or number
+        PORT: { type: 'string' }
     },
     additionalProperties: false
 };
