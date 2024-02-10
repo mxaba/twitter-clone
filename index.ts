@@ -27,7 +27,7 @@ const swaggerOption = {
 };
 
 interface Config {
-    POSTGRES_URL: string;
+    SQLITE_PATH: string;
     REDIS_URL: string;
     JWT_SECRET: string;
 }
@@ -51,9 +51,9 @@ interface Schema {
 
 const schema: Schema = {
     type: 'object',
-    required: ['POSTGRES_URL', 'REDIS_URL', 'JWT_SECRET'],
+    required: ['SQLITE_PATH', 'REDIS_URL', 'JWT_SECRET'],
     properties: {
-        POSTGRES_URL: { type: 'string' },
+        SQLITE_PATH: { type: 'string' },
         REDIS_URL: { type: 'string' },
         JWT_SECRET: { type: 'string' }
     },
@@ -66,18 +66,20 @@ async function connectToRedis(fastify: FastifyInstance) {
 }
 
 async function connectToDatabases(fastify: FastifyInstance) {
-    const sequelize = new Sequelize(fastify.config.POSTGRES_URL, {
-        dialect: 'postgres',
+    const sequelize = new Sequelize({
+        dialect: 'sqlite',
+        storage: fastify.config.SQLITE_PATH,
         logging: false,
     });
 
-    // Assign the sequelize instance to fastify
+    await sequelize.authenticate();
+
     fastify.decorate('sequelize', sequelize);
 }
 
 async function authenticator(fastify: FastifyInstance) {
     await fastify.register(require('fastify-jwt'), {
-        secret: 'my-super-secret',
+        secret: fastify.config.JWT_SECRET,
         algorithms: ['RS256']
     });
 }
@@ -87,7 +89,7 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
     await fastify.register(connectToRedis);
 
     fastify.register(fastifyJwt, {
-        secret: 'your-secret-key'
+        secret: fastify.config.JWT_SECRET
     });
     const sequelize = fastify.sequelize;
 
@@ -102,7 +104,6 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
         userId: DataTypes.INTEGER,
     });
 
-    // Define associations (relationships) between models
     User.hasMany(Tweet);
     Tweet.belongsTo(User);
 
@@ -120,9 +121,6 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
     const timelineService = new TimelineService(followService, tweetService);
     fastify.decorate('timelineService', timelineService);
 
-    // Create tables if they do not exist
-    await sequelize.sync({ force: false });
-
     fastify.decorate('authPreHandler', async function auth(request: FastifyRequest, reply: FastifyReply) {
         try {
             await request.jwtVerify();
@@ -130,9 +128,6 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
             reply.send(err);
         }
     });
-
-    //  TimelineService instantiation
-
 }
 
 export default async function (fastify: FastifyInstance, opts: any) {
