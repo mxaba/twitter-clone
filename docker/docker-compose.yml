@@ -9,14 +9,14 @@ services:
       context: ..
       dockerfile: docker/user.Dockerfile
     environment:
-      - SQLITE_PATH=./db/database.db
+      - SQLITE_PATH=../db/database.db
 
   tweet:
     build:
       context: ..
       dockerfile: docker/tweet.Dockerfile
     environment:
-      - SQLITE_PATH=./db/database.db
+      - SQLITE_PATH=../db/database.db
 
   follow:
     build:
@@ -25,14 +25,14 @@ services:
     depends_on:
       - redis
     environment:
-      - SQLITE_PATH=./db/database.db
+      - SQLITE_PATH=../db/database.db
 
   timeline:
     build:
       context: ..
       dockerfile: docker/timeline.Dockerfile
     environment:
-      - SQLITE_PATH=./db/database.db
+      - SQLITE_PATH=../db/database.db
 
   nginx:
     image: nginx

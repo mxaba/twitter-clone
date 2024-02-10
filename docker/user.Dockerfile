@@ -10,7 +10,7 @@ COPY . /usr/src/app
 
 EXPOSE 80
 
-ENV USER_MONGO_URL mongodb://mongo/user
-ENV JWT_SECRET qwertyuiopqwertyuiop
+ENV SQLITE_PATH=./db/database.db
+ENV JWT_SECRET jwtscreats
 
 CMD [ "npm", "run", "microservice", "--", "--port", "80", "--log-level", "debug", "--prefix", "/api/user", "user/index.js" ]
