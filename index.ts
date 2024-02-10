@@ -15,6 +15,7 @@ interface Config {
     SQLITE_PATH: string;
     REDIS_URL: string;
     JWT_SECRET: string;
+    PORT: string | number; // Add PORT to Config
 }
 
 declare module 'fastify' {
@@ -36,11 +37,12 @@ interface Schema {
 
 const schema: Schema = {
     type: 'object',
-    required: ['SQLITE_PATH', 'REDIS_URL', 'JWT_SECRET'],
+    required: ['SQLITE_PATH', 'REDIS_URL', 'JWT_SECRET', 'PORT'], // Add PORT to required fields
     properties: {
         SQLITE_PATH: { type: 'string' },
         REDIS_URL: { type: 'string' },
-        JWT_SECRET: { type: 'string' }
+        JWT_SECRET: { type: 'string' },
+        PORT: { type: 'number' } // PORT can be either string or number
     },
     additionalProperties: false
 };
@@ -124,5 +126,15 @@ export default async function (fastify: FastifyInstance, opts: any) {
         .register(userPlugin, { prefix: '/api/user' })
         .register(require('./tweet'), { prefix: '/api/tweet' })
         .register(require('./follow'), { prefix: '/api/follow' })
-        .register(require('./timeline'), { prefix: '/api/timeline' })
+        .register(require('./timeline'), { prefix: '/api/timeline' });
+
+    fastify.listen({ port: 8080 }, (err, address) => {
+        console.log(`Server listening at ${address}`)
+        if (err) {
+            console.error(err)
+            process.exit(1)
+        }
+        console.log(`Server listening at ${address}`)
+    })
 }
+
