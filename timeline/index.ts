@@ -10,6 +10,13 @@ interface CustomRequest extends FastifyRequest {
 }
 
 const plugin: FastifyPluginCallback = async (fastify, opts) => {
+    fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            await request.jwtVerify();
+        } catch (err) {
+            reply.send(err);
+        }
+    });
     fastify.get('/', { schema: timelineSchema }, getTimelineHandler);
 };
 

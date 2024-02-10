@@ -1,4 +1,4 @@
-import { FastifyPluginCallback, RouteHandlerMethod } from 'fastify';
+import { FastifyPluginCallback, FastifyReply, RouteHandlerMethod } from 'fastify';
 import { FastifyRequest } from 'fastify';
 import FollowService from './servers';
 
@@ -15,6 +15,14 @@ interface CustomRequest<Body = any, Params = any> extends FastifyRequest {
 
 const plugin: FastifyPluginCallback = async (fastify, opts) => {
     // fastify.addHook('preHandler', fastify.authPreHandler);
+
+    fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            await request.jwtVerify();
+        } catch (err) {
+            reply.send(err);
+        }
+    });
 
     fastify
         .post('/follow', { schema: { body: { type: 'object', required: ['userId'], properties: { userId: { type: 'string' } }, additionalProperties: false } } }, followHandler)

@@ -61,6 +61,13 @@ const plugin: FastifyPluginCallback = (fastify: FastifyInstance, options, done) 
 
     // Logged APIs
     fastify.register(async function (fastify) {
+        fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+            try {
+                await request.jwtVerify();
+            } catch (err) {
+                reply.send(err);
+            }
+        });
         fastify.get('/me', meHandler);
         fastify.get('/:userId', { schema: getProfile }, userHandler);
         fastify.get('/search', { schema: search }, searchHandler);

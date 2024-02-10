@@ -1,6 +1,6 @@
 'use strict';
 
-import { FastifyPluginCallback, FastifyRequest, RouteHandlerMethod } from 'fastify';
+import { FastifyPluginCallback, FastifyReply, FastifyRequest, RouteHandlerMethod } from 'fastify';
 import { getTweetsModel, getUserTweetsModel, tweet } from './model';
 import { TweetService } from './service';
 
@@ -26,6 +26,13 @@ const pluginMeta = {
 };
 
 const plugin: FastifyPluginCallback = async (fastify, opts) => {
+    fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            await request.jwtVerify();
+        } catch (err) {
+            reply.send(err);
+        }
+    });
     fastify.post('/', { schema: tweet }, addTwitterHandler);
     fastify.get('/', { schema: getUserTweetsModel }, getTwitterHandler);
     fastify.get('/:userIds', { schema: getTweetsModel }, getUserTweetsHandler);
