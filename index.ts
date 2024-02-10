@@ -11,21 +11,6 @@ import { Redis } from 'ioredis';
 import FollowService from './follow/servers';
 import TimelineService from './timeline/server';
 
-
-const swaggerOption = {
-    swagger: {
-        info: {
-            title: 'Test swagger',
-            description: 'testing the fastify swagger api',
-            version: '0.1.0'
-        },
-        host: 'localhost',
-        schemes: ['http'],
-        consumes: ['application/json'],
-        produces: ['application/json']
-    }
-};
-
 interface Config {
     SQLITE_PATH: string;
     REDIS_URL: string;
@@ -132,7 +117,6 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
 
 export default async function (fastify: FastifyInstance, opts: any) {
     await fastify
-        .register(require('fastify-swagger'), swaggerOption)
         .register(require('fastify-env'), { schema, data: [opts] })
         .register(fp(connectToDatabases))
         .register(fp(authenticator))
