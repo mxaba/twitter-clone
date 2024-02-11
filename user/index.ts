@@ -15,10 +15,10 @@ interface CustomRequest<Body = any, Params = any, Query = any> extends FastifyRe
     jwt: any;
 }
 
-const errorHandler = (error: Error, request: FastifyRequest, reply: FastifyReply) => {
+const errorHandler = (error: Error, request: any, reply: FastifyReply) => {
     const message = error.message;
-    const statusCode = errors[message as keyof typeof errors] ? 412 : 500;
-    reply.code(statusCode).send(error);
+    const statusCode = 500; // Set your desired status code here
+    reply.code(statusCode).send(message);
 };
 
 const loginHandler: RouteHandlerMethod = async (request, reply) => {

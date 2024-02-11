@@ -20,9 +20,11 @@
   },
   "homepage": "https://github.com/mxaba/twitter-clone#readme",
   "dependencies": {
-    "@fastify/jwt": "^8.0.0",
+    "@fastify/env": "^4.3.0",
+    "@fastify/jwt": "^5.0.0",
     "@fastify/postgres": "^5.2.2",
     "@types/ioredis": "^5.0.0",
+    "dotenv": "^16.4.2",
     "fastify": "^4.26.0",
     "fastify-jwt": "^4.2.0",
     "ioredis": "^5.3.2",
