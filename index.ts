@@ -25,29 +25,10 @@ declare module 'fastify' {
         config: Config;
         sequelize: Sequelize;
         redis: Redis;
+        userService: UserService;
     }
 }
 
-interface Schema {
-    type: 'object';
-    required: string[];
-    properties: {
-        [key: string]: { type: string };
-    };
-    additionalProperties: boolean;
-}
-
-const schema: Schema = {
-    type: 'object',
-    required: ['SQLITE_PATH', 'REDIS_URL', 'JWT_SECRET', 'PORT'],
-    properties: {
-        SQLITE_PATH: { type: 'string' },
-        REDIS_URL: { type: 'string' },
-        JWT_SECRET: { type: 'string' },
-        PORT: { type: 'string' }
-    },
-    additionalProperties: false
-};
 
 async function connectToRedis() {
     const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
@@ -85,6 +66,11 @@ async function decorateFastifyInstance(): Promise<void> {
 
     const User = sequelize.define('User', {
         username: DataTypes.STRING,
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true
+          },
         email: DataTypes.STRING,
         password: DataTypes.STRING,
     });
@@ -118,7 +104,6 @@ async function decorateFastifyInstance(): Promise<void> {
         }
     });
 }
-
 
 server
 .register(fp(connectToDatabases))

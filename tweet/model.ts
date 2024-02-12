@@ -1,11 +1,9 @@
-import { DataTypes } from 'sequelize';
-
 const tweet = {
     body: {
         type: 'object',
         required: [ 'text' ],
         properties: {
-            text: { type: DataTypes.STRING, minLength: 1, maxLength: 144 },
+            text: { type: 'string' },
             tags: {
                 type: 'array',
                 items: {
@@ -23,8 +21,7 @@ const getUserTweetsModel = {
         required: ['userIds'],
         properties: {
             userIds: {
-                type: DataTypes.STRING,
-                pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})?',
+                type: 'string'
             },
         },
         additionalProperties: false,
@@ -35,9 +32,9 @@ const getUserTweetsModel = {
             items: {
                 type: 'object',
                 properties: {
-                    id: { type: DataTypes.STRING },
-                    userId: { type: DataTypes.STRING },
-                    text: { type: DataTypes.STRING },
+                    id: { type: 'string' },
+                    userId: { type: 'string' },
+                    text: { type: 'string' },
                     tags: {
                         type: 'array',
                         items: {
@@ -57,9 +54,9 @@ const getTweetsModel = {
             items: {
                 type: 'object',
                 properties: {
-                    id: { type: DataTypes.STRING },
-                    userId: { type: DataTypes.STRING },
-                    text: { type: DataTypes.STRING },
+                    id: { type: 'string' },
+                    userId: { type: 'string' },
+                    text: { type: 'string' },
                     tags: {
                         type: 'array',
                         items: {

@@ -1,37 +1,36 @@
-import { DataTypes } from 'sequelize';
-
 const userProfileOutput = {
-    _id: { type: DataTypes.STRING },
-    username: { type: DataTypes.STRING }
+    _id: { type: 'string' },
+    username: { type: 'string' }
 };
 
 const registration = {
     body: {
-        username: { type: DataTypes.STRING },
-        password: { type: DataTypes.STRING }
+        email: { type: 'string' },
+        username: { type: 'string' },
+        password: { type: 'string' }
     },
     response: {
         200: {
-            userId: { type: DataTypes.STRING }
+            userId: { type: 'string' }
         }
     }
 };
 
 const login = {
     body: {
-        username: { type: DataTypes.STRING },
-        password: { type: DataTypes.STRING }
+        username: { type: 'string' },
+        password: { type: 'string' }
     },
     response: {
         200: {
-            jwt: { type: DataTypes.STRING }
+            jwt: { type: 'string' }
         }
     }
 };
 
 const search = {
     querystring: {
-        search: { type: DataTypes.STRING }
+        search: { type: 'string' }
     },
     response: {
         200: userProfileOutput
@@ -41,10 +40,7 @@ const search = {
 const getProfile = {
     params: {
         userId: {
-            type: DataTypes.STRING,
-            validate: {
-                is: /^[0-9a-fA-F]{24}$/
-            }
+            type: 'string' ,
         }
     },
     response: {

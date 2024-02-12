@@ -1,16 +1,13 @@
 import { errors } from '../errors';
 import { Model, Sequelize, DataTypes, Op } from 'sequelize';
+import bcrypt from 'bcrypt';
 
-interface UserAttributes {
-  id?: string;
-  username: string;
-  password: string;
-}
 
-class User extends Model<UserAttributes> implements UserAttributes {
+class User extends Model {
   public id!: string;
   public username!: string;
   public password!: string;
+  public email!: string;
 
   static initialize(sequelize: Sequelize) {
     this.init(
@@ -21,6 +18,11 @@ class User extends Model<UserAttributes> implements UserAttributes {
           primaryKey: true
         },
         username: {
+          type: DataTypes.STRING,
+          allowNull: false,
+          unique: true
+        },
+        email: {
           type: DataTypes.STRING,
           allowNull: false,
           unique: true
@@ -46,9 +48,10 @@ class UserService {
     User.initialize(this.sequelize);
   }
 
-  async register(username: string, password: string): Promise<string> {
+  async register(username: string, email: string, password: string): Promise<string> {
     try {
-      const user = await User.create({ username, password });
+      const user = await User.create({ username, email, password });
+      console.log("user", user)
       return user.id;
     } catch (error) {
       if ((error as any).name === 'SequelizeUniqueConstraintError') {
@@ -58,11 +61,34 @@ class UserService {
     }
   }
 
-  async login(username: string, password: string): Promise<User | null> {
-    const user = await User.findOne({ where: { username, password }, attributes: { exclude: ['password'] } });
-    if (!user) throw new Error('Wrong credentials');
-    return user;
+  async findByUsername(username: string): Promise<User | null> {
+    return User.findOne({ where: { username }, attributes: { exclude: ['password'] } });
   }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return User.findOne({ where: { email }, attributes: { exclude: ['password'] } });
+  }
+
+  async login(usernameOrEmail: string, password: string): Promise<User | null> {
+    const user = await User.findOne({ 
+        where: { 
+            [Op.or]: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
+        }
+    });
+
+    console.log("user >>> ", user)
+
+    if (!user || !password) {
+        return null;
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (passwordMatch) {
+        return user;
+    } else {
+        return null;
+    }
+}
 
   async getProfile(id: string): Promise<User | null> {
     return User.findByPk(id, { attributes: { exclude: ['password'] } });
@@ -70,13 +96,16 @@ class UserService {
 
   async search(searchString: string): Promise<User[]> {
     return User.findAll({
-      where: {
-        username: { [Op.iLike]: `%${searchString}%` }
-      },
-      limit: 5,
-      attributes: { exclude: ['password'] }
+        where: {
+            [Op.or]: [
+                { username: { [Op.like]: `%${searchString}%` } },
+                { email: { [Op.like]: `%${searchString}%` } }
+            ]
+        },
+        limit: 5,
+        attributes: { exclude: ['password'] }
     });
-  }
+}
 }
 
 export { UserService, User };
