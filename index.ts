@@ -1,6 +1,5 @@
 import fastify from 'fastify';
 import fp from 'fastify-plugin';
-import { FastifyInstance } from 'fastify';
 import { Sequelize } from 'sequelize-typescript';
 import userPlugin from './user';
 import { FastifyRequest, FastifyReply } from 'fastify';
@@ -50,12 +49,12 @@ const schema: Schema = {
     additionalProperties: false
 };
 
-async function connectToRedis(fastify: FastifyInstance) {
+async function connectToRedis() {
     const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
-    fastify.decorate('redis', redis);
+    server.decorate('redis', redis);
 }
 
-async function connectToDatabases(fastify: FastifyInstance) {
+async function connectToDatabases() {
     const sequelize = new Sequelize({
         dialect: 'sqlite',
         storage: process.env.SQLITE_PATH || "./db/database.db",
@@ -64,28 +63,25 @@ async function connectToDatabases(fastify: FastifyInstance) {
 
     await sequelize.authenticate();
 
-    fastify.decorate('sequelize', sequelize);
+    server.decorate('sequelize', sequelize);
 }
 
-async function authenticator(fastify: FastifyInstance) {
+async function authenticator() {
     const jwtSecret = process.env.JWT_SECRET || "my-super-secret";
     if (!jwtSecret) {
         throw new Error('JWT_SECRET is not defined');
     }
 
-    await fastify.register(fastifyJwt, {
+    await server.register(fastifyJwt, {
         secret: jwtSecret,
         algorithms: ['RS256']
     } as FastifyJWTOptions); 
 }
 
-async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> {
-    await fastify.register(connectToRedis);
+async function decorateFastifyInstance(): Promise<void> {
+    await server.register(connectToRedis);
 
-    fastify.register(fastifyJwt, {
-        secret: process.env.JWT_SECRET || "my-super-secret"
-    });
-    const sequelize = fastify.sequelize;
+    const sequelize = server.sequelize;
 
     const User = sequelize.define('User', {
         username: DataTypes.STRING,
@@ -103,18 +99,18 @@ async function decorateFastifyInstance(fastify: FastifyInstance): Promise<void> 
     await sequelize.sync();
 
     const userService = new UserService(sequelize);
-    fastify.decorate('userService', userService);
+    server.decorate('userService', userService);
 
     const tweetService = new TweetService(sequelize);
-    fastify.decorate('tweetService', tweetService);
+    server.decorate('tweetService', tweetService);
 
-    const followService = new FollowService(fastify);
-    fastify.decorate('followService', followService);
+    const followService = new FollowService(server);
+    server.decorate('followService', followService);
 
     const timelineService = new TimelineService(followService, tweetService);
-    fastify.decorate('timelineService', timelineService);
+    server.decorate('timelineService', timelineService);
 
-    fastify.decorate('authPreHandler', async function auth(request: FastifyRequest, reply: FastifyReply) {
+    server.decorate('authPreHandler', async function auth(request: FastifyRequest, reply: FastifyReply) {
         try {
             await request.jwtVerify();
         } catch (err) {
