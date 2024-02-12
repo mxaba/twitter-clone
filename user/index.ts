@@ -6,20 +6,7 @@ import { params, userPro } from 'utility/interface';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { getUserIdFromToken } from '../utility';
-
-
-interface CustomRequest<Body = any, Params = any, Query = any> extends FastifyRequest {
-    body: Body;
-    params: Params;
-    query: Query;
-    user: {
-        _id: string;
-    };
-    userService: UserService;
-    jwt: any;
-}
-
-
+import { isEmail, isValidPassword } from '../utility/validator';
 
 const errorHandler = (error: Error, request: any, reply: FastifyReply) => {
     const message = error.message;
@@ -41,12 +28,19 @@ const loginHandler = async (request: FastifyRequest, reply: FastifyReply, userSe
 const registerHandler = async (request: FastifyRequest, reply: FastifyReply, userService: UserService) => {
     const { username, email, password } = request.body as userPro;
 
+    if (!isEmail(email)) {
+        throw new Error('Invalid email format');
+    }
+
+    if (!isValidPassword(password)) {
+        throw new Error('Invalid password');
+    }
+
     const existingUserByUsername = await userService.findByUsername(username);
     if (existingUserByUsername) {
         reply.status(400).send({ error: 'Username already exists' });
         return;
     }
-
     const existingUserByEmail = await userService.findByEmail(email);
     if (existingUserByEmail) {
         reply.status(400).send({ error: 'Email already exists' });
@@ -59,7 +53,7 @@ const registerHandler = async (request: FastifyRequest, reply: FastifyReply, use
     return { userId };
 };
 
-const meHandler = async (request: FastifyRequest, reply: FastifyReply, userService: UserService) => {    
+const meHandler = async (request: FastifyRequest, reply: FastifyReply, userService: UserService) => {
     const token = request.headers.authorization?.replace('Bearer ', '')
     try {
         if (!token) {
@@ -82,12 +76,12 @@ const meHandler = async (request: FastifyRequest, reply: FastifyReply, userServi
     }
 };
 const userHandler = async (request: FastifyRequest, reply: FastifyReply, userService: UserService) => {
-    const { userId } = request.params  as params;
+    const { userId } = request.params as params;
     return userService.getProfile(userId);
 };
 
 const searchHandler = async (request: FastifyRequest, reply: FastifyReply, userService: UserService) => {
-    const { searchString } = request.params  as params;
+    const { searchString } = request.params as params;
     return userService.search(searchString);
 };
 
@@ -106,9 +100,9 @@ const plugin: FastifyPluginCallback = (fastify: FastifyInstance, options, done) 
                 reply.send(err);
             }
         });
-        fastify.get('/me', (request, reply) =>  meHandler(request, reply, userService));
+        fastify.get('/me', (request, reply) => meHandler(request, reply, userService));
         fastify.get('/:userId', { schema: getProfile }, (request, reply) => userHandler(request, reply, userService));
-        fastify.get('/search', { schema: search }, (request, reply) =>  searchHandler(request, reply, userService));
+        fastify.get('/search', { schema: search }, (request, reply) => searchHandler(request, reply, userService));
     });
 
     fastify.setErrorHandler(errorHandler);
