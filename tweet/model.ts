@@ -1,17 +1,7 @@
 const tweet = {
     body: {
-        type: 'object',
-        required: [ 'text' ],
-        properties: {
-            text: { type: 'string' },
-            tags: {
-                type: 'array',
-                items: {
-                    type: 'string',
-                },
-            },
-        },
-        additionalProperties: false,
+        tweet: { type: 'string' },
+        tags: { type: 'string' },
     },
 };
 

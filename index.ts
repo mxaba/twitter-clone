@@ -26,6 +26,7 @@ declare module 'fastify' {
         sequelize: Sequelize;
         redis: Redis;
         userService: UserService;
+        tweetService: TweetService;
     }
 }
 
@@ -77,6 +78,12 @@ async function decorateFastifyInstance(): Promise<void> {
     
     const Tweet = sequelize.define('Tweet', {
         content: DataTypes.STRING,
+        userId: DataTypes.STRING,
+        createdAt: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW,
+        },
+        tags: DataTypes.STRING
     });
     
     User.hasMany(Tweet, { foreignKey: 'userId' });

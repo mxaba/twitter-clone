@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-function getUserIdFromToken(token: string): string | null {
+export function getUserIdFromToken(token: string): string | null {
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET || 'my-super-secret') as { userId: string };
 
@@ -13,4 +13,10 @@ function getUserIdFromToken(token: string): string | null {
     }
 }
 
-export { getUserIdFromToken };
+export function arrayToString(arr: Array<string>) {
+    return arr.join(',');
+}
+
+export function stringToArray(str: string) {
+    return str.split(',');
+}

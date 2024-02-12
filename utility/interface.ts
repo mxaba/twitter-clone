@@ -9,3 +9,9 @@ export interface params {
     userId: string,
     searchString: string
 }
+
+export interface tweets {
+    tweet: string,
+    tags: string,
+    createdBy: string,
+}

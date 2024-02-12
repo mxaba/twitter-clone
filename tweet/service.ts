@@ -5,7 +5,7 @@ class Tweet extends Model {
     public userId!: string;
     public text!: string;
     public createdAt!: Date;
-    public tags!: string[];
+    public tags!: string;
 
     static initialize(sequelize: Sequelize) {
         return this.init({
@@ -18,7 +18,7 @@ class Tweet extends Model {
                 type: DataTypes.UUID,
                 allowNull: false,
             },
-            text: {
+            content: {
                 type: DataTypes.STRING,
                 allowNull: false,
             },
@@ -27,7 +27,7 @@ class Tweet extends Model {
                 defaultValue: DataTypes.NOW,
             },
             tags: {
-                type: DataTypes.ARRAY(DataTypes.STRING),
+                type: DataTypes.STRING,
                 allowNull: true,
             },
         }, {
@@ -52,8 +52,8 @@ class TweetService {
         });
     }
 
-    async addTweet(user: string, text: string, tags: string[] = []) { 
-        return Tweet.create({ userId: user, text, tags });
+    async addTweet(user: string, content: string, tags: string) { 
+        return Tweet.create({ userId: user, content, tags });
     }
 }
 

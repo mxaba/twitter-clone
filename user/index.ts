@@ -1,18 +1,12 @@
 import { FastifyPluginCallback, FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { UserService } from './service';
 import { getProfile, login, registration, search } from './models';
-import { RouteHandlerMethod } from 'fastify';
 import { params, userPro } from 'utility/interface';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { getUserIdFromToken } from '../utility';
 import { isEmail, isValidPassword } from '../utility/validator';
-
-const errorHandler = (error: Error, request: any, reply: FastifyReply) => {
-    const message = error.message;
-    const statusCode = 500; // Set your desired status code here
-    reply.code(statusCode).send(message);
-};
+import { errorHandler } from '../errors';
 
 const loginHandler = async (request: FastifyRequest, reply: FastifyReply, userService: UserService) => {
     const { username, password } = request.body as userPro;

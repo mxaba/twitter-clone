@@ -70,42 +70,63 @@ class UserService {
   }
 
   async login(usernameOrEmail: string, password: string): Promise<User | null> {
-    const user = await User.findOne({ 
-        where: { 
-            [Op.or]: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
-        }
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
+      }
     });
 
     console.log("user >>> ", user)
 
     if (!user || !password) {
-        return null;
+      return null;
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (passwordMatch) {
-        return user;
+      return user;
     } else {
-        return null;
+      return null;
     }
-}
+  }
 
   async getProfile(id: string): Promise<User | null> {
     return User.findByPk(id, { attributes: { exclude: ['password'] } });
   }
-
   async search(searchString: string): Promise<User[]> {
     return User.findAll({
-        where: {
-            [Op.or]: [
-                { username: { [Op.like]: `%${searchString}%` } },
-                { email: { [Op.like]: `%${searchString}%` } }
-            ]
-        },
-        limit: 5,
-        attributes: { exclude: ['password'] }
+      where: {
+        [Op.or]: [
+          { username: { [Op.like]: `%${searchString}%` } },
+          { email: { [Op.like]: `%${searchString}%` } }
+        ]
+      },
+      limit: 5,
+      attributes: { exclude: ['password'] }
     });
-}
+  }
+
+  async findUsersByUsername(usernames: string[]) {
+    const users = [];
+    const notFoundUsers = [];
+    const ids = [];
+  
+    for (const username of usernames) {
+      try {
+        const user = await this.findByUsername(username);
+        if (user) {
+          users.push(user);
+          ids.push(username);
+        } else {
+          notFoundUsers.push(username);
+        }
+      } catch (error) {
+        console.error(`Error finding user "${username}":`, error);
+        notFoundUsers.push(username);
+      }
+    }
+    return {users: users, usernames: ids};
+  }
 }
 
 export { UserService, User };
