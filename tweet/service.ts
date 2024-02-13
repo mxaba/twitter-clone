@@ -3,7 +3,7 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 class Tweet extends Model {
     public id!: string;
     public userId!: string;
-    public text!: string;
+    public content!: string;
     public createdAt!: Date;
     public tags!: string;
 
@@ -15,7 +15,7 @@ class Tweet extends Model {
                 defaultValue: DataTypes.UUIDV4,
             },
             userId: {
-                type: DataTypes.UUID,
+                type: DataTypes.STRING,
                 allowNull: false,
             },
             content: {
@@ -45,15 +45,15 @@ class TweetService {
         Tweet.initialize(this.sequelize);
     }
 
-    async fetchTweets(userIds: string[]) {
+    async fetchTweets(userId: string[]) {
         return Tweet.findAll({
-            where: { userId: userIds },
+            where: { userId: userId },
             order: [['createdAt', 'DESC']],
         });
     }
 
-    async addTweet(user: string, content: string, tags: string) { 
-        return Tweet.create({ userId: user, content, tags });
+    async addTweet(user: string, content: string, tags: string) {
+        return Tweet.create({ userId: user, content: content, tags: tags });
     }
 }
 

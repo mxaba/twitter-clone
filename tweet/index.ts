@@ -1,10 +1,10 @@
 'use strict';
 
 import { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteHandlerMethod } from 'fastify';
-import { getTweetsModel, getUserTweetsModel, tweet } from './model';
+import { getUserTweetsModel, tweet } from './model';
 import { TweetService } from './service';
 import { tweets, userPro } from '../utility/interface';
-import { arrayToString, getUserIdFromToken, stringToArray } from '../utility';
+import { arrayToString, extractTaggedUsers, getUserIdFromToken, stringToArray } from '../utility';
 import { MAX_TWEET_LENGTH } from '../utility/constants';
 import { errorHandler } from '../errors';
 import { UserService } from 'user/service';
@@ -41,8 +41,8 @@ const plugin: FastifyPluginCallback = (fastify: FastifyInstance, options, done) 
         }
     });
     fastify.post('/', { schema: tweet }, (request, reply) => addTwitterHandler(request, reply, tweetService, userService));
-    fastify.get('/', { schema: getUserTweetsModel }, getTwitterHandler);
-    fastify.get('/:userIds', { schema: getTweetsModel }, getUserTweetsHandler);
+    fastify.get('/', { schema: getUserTweetsModel }, (request, reply) => getTwitterHandler(request, reply, tweetService));
+    fastify.get('/:userIds', { schema: getUserTweetsModel }, (request, reply) => getUserTweetsHandler(request, reply, tweetService));
 
     fastify.setErrorHandler(errorHandler);
 
@@ -60,7 +60,7 @@ const addTwitterHandler = async (request: FastifyRequest, reply: FastifyReply, t
         reply.code(401).send({ message: 'Invalid or expired token' });
         return
     }
-    const { tweet, tags } = request.body as tweets
+    const { tweet } = request.body as tweets
     const userId = getUserIdFromToken(token)
     if (!userId) {
         reply.code(401).send({ message: 'Invalid or expired token' });
@@ -70,26 +70,47 @@ const addTwitterHandler = async (request: FastifyRequest, reply: FastifyReply, t
         reply.code(400).send({ message: 'Tweet exceeds maximum character limit' });
         return;
     } else if (tweet.length < 1) {
-        reply.code(400).send({ message: 'You must something' });
+        reply.code(400).send({ message: 'You must tweet something' });
     }
 
-    const mentionedUsernames = stringToArray(tags).map(tag => tag.slice(1));
-    const foundUsers = await userService.findUsersByUsername(mentionedUsernames) as {users: userPro[], usernames: string[]}
-    await tweetService.addTweet(userId, tweet, arrayToString(foundUsers.usernames));
+    const mentionedUsernames = extractTaggedUsers(tweet).map(tag => tag.slice(1));
+    const foundUsers = await userService.findUsersByUsername(mentionedUsernames) as {users: userPro[], notFoundUsers: string[], usernames: string[]}
+
+    if (foundUsers.notFoundUsers.length > 0) {
+        reply.code(400).send({ message: `Some of the tags users don not exists: ${arrayToString(foundUsers.notFoundUsers)}` });
+        return;
+    }
+    await tweetService.addTweet(userId, tweet, arrayToString(mentionedUsernames));
     reply.code(204);
-
-
 };
 
-const getTwitterHandler: RouteHandlerMethod = (req, reply) => {
-    const request = req as CustomRequest;
-    return request.tweetService.fetchTweets([request.user._id]);
+const getTwitterHandler = async (request: FastifyRequest, reply: FastifyReply, tweetService: TweetService) => {
+    const token = request.headers.authorization?.replace('Bearer ', '')
+    if (!token) {
+        reply.code(401).send({ message: 'Invalid or expired token' });
+        return
+    }
+    const userId = getUserIdFromToken(token);
+
+    if (!userId) {
+        reply.code(401).send({ message: 'Invalid or expired token' });
+        return;
+    }
+
+    return tweetService.fetchTweets([userId]);
 };
 
-const getUserTweetsHandler: RouteHandlerMethod = (req, reply) => {
-    const request = req as CustomRequest;
-    const userIds = request.params.userIds.split(',');
-    return request.tweetService.fetchTweets(userIds);
+const getUserTweetsHandler = async (request: FastifyRequest, reply: FastifyReply, tweetService: TweetService) => {
+    const { userIds } = request.params as { userIds: string };
+    const users = userIds.split(',');
+    
+    try {
+        const tweets = await tweetService.fetchTweets(users);
+        return tweets;
+    } catch (error) {
+        console.error('Error fetching tweets:', error);
+        reply.code(500).send({ message: 'Internal Server Error' });
+    }
 };
 
 export = plugin;

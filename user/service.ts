@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 class User extends Model {
   public id!: string;
   public username!: string;
+  public createdAt!: Date;
   public password!: string;
   public email!: string;
 
@@ -30,7 +31,11 @@ class User extends Model {
         password: {
           type: DataTypes.STRING,
           allowNull: false
-        }
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          defaultValue: DataTypes.NOW,
+        },
       },
       {
         sequelize,
@@ -51,7 +56,6 @@ class UserService {
   async register(username: string, email: string, password: string): Promise<string> {
     try {
       const user = await User.create({ username, email, password });
-      console.log("user", user)
       return user.id;
     } catch (error) {
       if ((error as any).name === 'SequelizeUniqueConstraintError') {
@@ -75,8 +79,6 @@ class UserService {
         [Op.or]: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
       }
     });
-
-    console.log("user >>> ", user)
 
     if (!user || !password) {
       return null;
@@ -110,7 +112,7 @@ class UserService {
     const users = [];
     const notFoundUsers = [];
     const ids = [];
-  
+
     for (const username of usernames) {
       try {
         const user = await this.findByUsername(username);
@@ -125,7 +127,7 @@ class UserService {
         notFoundUsers.push(username);
       }
     }
-    return {users: users, usernames: ids};
+    return { users: users, usernames: ids,  notFoundUsers: notFoundUsers};
   }
 }
 

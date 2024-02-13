@@ -20,3 +20,15 @@ export function arrayToString(arr: Array<string>) {
 export function stringToArray(str: string) {
     return str.split(',');
 }
+
+export function extractTaggedUsers(text: string): string[] {
+    const regex = /@(\w+)/g;
+
+    const taggedUsers: string[] = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+        taggedUsers.push(match[1]); 
+    }
+
+    return taggedUsers;
+}

@@ -2,6 +2,7 @@ import fastify from 'fastify';
 import fp from 'fastify-plugin';
 import { Sequelize } from 'sequelize-typescript';
 import userPlugin from './user';
+import tweetPlugin from './tweet';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import fastifyJwt, { FastifyJWTOptions } from '@fastify/jwt';
 import { UserService } from './user/service';
@@ -57,7 +58,7 @@ async function authenticator() {
     await server.register(fastifyJwt, {
         secret: jwtSecret,
         algorithms: ['RS256']
-    } as FastifyJWTOptions); 
+    } as FastifyJWTOptions);
 }
 
 async function decorateFastifyInstance(): Promise<void> {
@@ -71,12 +72,21 @@ async function decorateFastifyInstance(): Promise<void> {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
-          },
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW,
+        },
         email: DataTypes.STRING,
         password: DataTypes.STRING,
     });
-    
+
     const Tweet = sequelize.define('Tweet', {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true
+        },
         content: DataTypes.STRING,
         userId: DataTypes.STRING,
         createdAt: {
@@ -85,9 +95,9 @@ async function decorateFastifyInstance(): Promise<void> {
         },
         tags: DataTypes.STRING
     });
-    
+
     User.hasMany(Tweet, { foreignKey: 'userId' });
-    Tweet.belongsTo(User, { foreignKey: 'userId' }); 
+    Tweet.belongsTo(User, { foreignKey: 'userId' });
 
     await sequelize.sync();
 
@@ -113,13 +123,13 @@ async function decorateFastifyInstance(): Promise<void> {
 }
 
 server
-.register(fp(connectToDatabases))
-.register(fp(authenticator))
-.register(fp(decorateFastifyInstance))
-.register(userPlugin, { prefix: '/api/user' })
-.register(require('./tweet'), { prefix: '/api/tweet' })
-.register(require('./follow'), { prefix: '/api/follow' })
-.register(require('./timeline'), { prefix: '/api/timeline' });
+    .register(fp(connectToDatabases))
+    .register(fp(authenticator))
+    .register(fp(decorateFastifyInstance))
+    .register(userPlugin, { prefix: '/api/user' })
+    .register(tweetPlugin, { prefix: '/api/tweet' })
+    .register(require('./follow'), { prefix: '/api/follow' })
+    .register(require('./timeline'), { prefix: '/api/timeline' });
 
 
 server.listen({ port: 8080 }, (err, address) => {

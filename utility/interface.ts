@@ -12,6 +12,5 @@ export interface params {
 
 export interface tweets {
     tweet: string,
-    tags: string,
     createdBy: string,
 }
