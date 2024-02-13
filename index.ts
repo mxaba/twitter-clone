@@ -63,7 +63,7 @@ async function authenticator() {
     } as FastifyJWTOptions);
 }
 
-async function decorateFastifyInstance(): Promise<void> {
+export async function decorateFastifyInstance(): Promise<void> {
     await server.register(connectToRedis);
 
     const sequelize = server.sequelize;
