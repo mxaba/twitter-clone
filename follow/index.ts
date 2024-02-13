@@ -1,36 +1,30 @@
-import { FastifyPluginCallback, FastifyReply, RouteHandlerMethod } from 'fastify';
-import { FastifyRequest } from 'fastify';
+import { FastifyPluginCallback, FastifyRequest, FastifyReply } from 'fastify';
 import FollowService from './servers';
+import { getUserIdFromToken } from '../utility';
 
-interface CustomRequest<Body = any, Params = any> extends FastifyRequest {
-    params: Params;
-    body: Body;
-    user: {
-        _id: string;
-    };
-    followService: FollowService;
-    jwt: any;
-    userId: string;
-}
+const getUserId = (request: FastifyRequest, reply: FastifyReply) => {
+    const token = request.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+        reply.code(401).send({ message: 'Invalid or expired token' });
+        return;
+    }
+    const userId = getUserIdFromToken(token);
+    if (!userId) {
+        reply.code(401).send({ message: 'Invalid or expired token' });
+        return;
+    }
+    return userId
+};
 
 const plugin: FastifyPluginCallback = async (fastify, opts) => {
-    // fastify.addHook('preHandler', fastify.authPreHandler);
+    const followService: FollowService = fastify.followService;
 
-    fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
-        try {
-            await request.jwtVerify();
-        } catch (err) {
-            reply.send(err);
-        }
-    });
-
-    fastify
-        .post('/follow', { schema: { body: { type: 'object', required: ['userId'], properties: { userId: { type: 'string' } }, additionalProperties: false } } }, followHandler)
-        .post('/unfollow', { schema: { body: { type: 'object', required: ['userId'], properties: { userId: { type: 'string' } }, additionalProperties: false } } }, unfollowHandler)
-        .get('/following/me', getMyFollowingHandler)
-        .get('/followers/me', getMyFollowersHandler)
-        .get('/following/:userId', getUserFollowingHandler)
-        .get('/followers/:userId', getUserFollowersHandler);
+    fastify.post('/follow', (request, reply) => followHandler(request, reply, followService));
+    fastify.post('/unfollow', (request, reply) => unfollowHandler(request, reply, followService));
+    fastify.get('/following/me', (request, reply) => getMyFollowingHandler(request, reply, followService));
+    fastify.get('/followers/me', (request, reply) => getMyFollowersHandler(request, reply, followService));
+    fastify.get('/following/:userId', (request, reply) => getUserFollowingHandler(request, reply, followService));
+    fastify.get('/followers/:userId', (request, reply) => getUserFollowersHandler(request, reply, followService));
 };
 
 (plugin as any)[Symbol.for('plugin-meta')] = {
@@ -43,36 +37,74 @@ const plugin: FastifyPluginCallback = async (fastify, opts) => {
     }
 };
 
-const followHandler: RouteHandlerMethod = async (req, reply) => {
-    const { userId, user, followService } = req.body as CustomRequest;
-    await followService.follow(user._id, userId);
-    reply.code(204);
-}
+const followHandler = async (request: FastifyRequest, reply: FastifyReply, followService: FollowService) => {
+    const { userId } = request.body as { userId: string };
+    const user = getUserId(request, reply)
 
-const unfollowHandler: RouteHandlerMethod = async (req, reply) => {
-    const { userId, user, followService } = req.body as CustomRequest;
-    await followService.unfollow(user._id, userId);
-    reply.code(204);
-}
+    if (!user) {
+        return
+    }
+    try {
+        await followService.follow(user, userId);
+        reply.code(204);
+    } catch (error) {
+        reply.send(error);
+    }
+};
 
-const getMyFollowingHandler: RouteHandlerMethod = async (req, reply) => {
-    const { user, followService } = req.body as CustomRequest;
-    return followService.getFollowing(user._id);
-}
+const unfollowHandler = async (request: FastifyRequest, reply: FastifyReply, followService: FollowService) => {
+    const { userId } = request.body as { userId: string };
+    try {
+        const user = getUserId(request, reply)
 
-const getMyFollowersHandler: RouteHandlerMethod = async (req, reply) => {
-    const { user, followService } = req.body as CustomRequest;
-    return followService.getFollowers(user._id);
-}
+        if (!user) {
+            return
+        }
+        await followService.unfollow(user, userId);
+        reply.code(204);
+    } catch (error) {
+        reply.send(error);
+    }
+};
 
-const getUserFollowingHandler: RouteHandlerMethod = async (req, reply) => {
-    const { params, followService } = req.body as CustomRequest;
-    return followService.getFollowing(params.userId);
-}
+const getMyFollowingHandler = async (request: FastifyRequest, reply: FastifyReply, followService: FollowService) => {
+    try {
+        const user = getUserId(request, reply)
 
-const  getUserFollowersHandler: RouteHandlerMethod = async (req, reply) => {
-    const { params, followService } = req.body as CustomRequest;
-    return followService.getFollowers(params.userId);
-}
+        if (!user) {
+            return
+        }
+        return followService.getFollowing(user);
+    } catch (error) {
+        reply.send(error);
+    }
+};
+
+const getMyFollowersHandler = async (request: FastifyRequest, reply: FastifyReply, followService: FollowService) => {
+    const { userId } = request.params as { userId: string };
+    try {
+        return followService.getFollowers(userId);
+    } catch (error) {
+        reply.send(error);
+    }
+};
+
+const getUserFollowingHandler = async (request: FastifyRequest, reply: FastifyReply, followService: FollowService) => {
+    const { userId } = request.params as { userId: string };
+    try {
+        return followService.getFollowing(userId);
+    } catch (error) {
+        reply.send(error);
+    }
+};
+
+const getUserFollowersHandler = async (request: FastifyRequest, reply: FastifyReply, followService: FollowService) => {
+    const { userId } = request.params as { userId: string };
+    try {
+        return followService.getFollowers(userId);
+    } catch (error) {
+        reply.send(error);
+    }
+};
 
 export = plugin;

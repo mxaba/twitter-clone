@@ -2,59 +2,42 @@ import { FastifyInstance } from 'fastify';
 
 function execRedis(fastify: FastifyInstance, method: string, args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
-      args.push((err: Error | null, result: any) => {
-        if (err) return reject(err);
-        resolve(result);
-      });
-      (fastify.redis as any)[method].apply(fastify.redis, args);
+        args.push((err: Error | null, result: any) => {
+            if (err) return reject(err);
+            resolve(result);
+        });
+        (fastify.redis as any)[method].apply(fastify.redis, args);
     });
-  }
-  
-
-function follow(fastify: FastifyInstance, meId: string, otherId: string): Promise<any> {
-  return Promise.all([
-    execRedis(fastify, 'zadd', [`following:${meId}`, Date.now(), otherId]),
-    execRedis(fastify, 'zadd', [`followers:${otherId}`, Date.now(), meId]),
-  ]);
-}
-
-function unfollow(fastify: FastifyInstance, meId: string, otherId: string): Promise<any> {
-  return Promise.all([
-    execRedis(fastify, 'zrem', [`following:${meId}`, otherId]),
-    execRedis(fastify, 'zrem', [`followers:${otherId}`, meId]),
-  ]);
-}
-
-function getFollowing(fastify: FastifyInstance, meId: string): Promise<any> {
-  return execRedis(fastify, 'zrange', [`following:${meId}`, 0, -1]);
-}
-
-function getFollowers(fastify: FastifyInstance, otherId: string): Promise<any> {
-  return execRedis(fastify, 'zrange', [`followers:${otherId}`, 0, -1]);
 }
 
 class FollowService {
-  private fastify: FastifyInstance;
+    private fastify: FastifyInstance;
 
-  constructor(fastify: FastifyInstance) {
-    this.fastify = fastify;
-  }
+    constructor(fastify: FastifyInstance) {
+        this.fastify = fastify;
+    }
 
-  follow(meId: string, otherId: string): Promise<any> {
-    return follow(this.fastify, meId, otherId);
-  }
+    async follow(meId: string, otherId: string): Promise<void> {
+        await Promise.all([
+            execRedis(this.fastify, 'zadd', [`following:${meId}`, Date.now(), otherId]),
+            execRedis(this.fastify, 'zadd', [`followers:${otherId}`, Date.now(), meId]),
+        ]);
+    }
 
-  unfollow(meId: string, otherId: string): Promise<any> {
-    return unfollow(this.fastify, meId, otherId);
-  }
+    async unfollow(meId: string, otherId: string): Promise<void> {
+        await Promise.all([
+            execRedis(this.fastify, 'zrem', [`following:${meId}`, otherId]),
+            execRedis(this.fastify, 'zrem', [`followers:${otherId}`, meId]),
+        ]);
+    }
 
-  getFollowing(meId: string): Promise<any> {
-    return getFollowing(this.fastify, meId);
-  }
+    async getFollowing(meId: string): Promise<string[]> {
+        return execRedis(this.fastify, 'zrange', [`following:${meId}`, 0, -1]);
+    }
 
-  getFollowers(otherId: string): Promise<any> {
-    return getFollowers(this.fastify, otherId);
-  }
+    async getFollowers(otherId: string): Promise<string[]> {
+        return execRedis(this.fastify, 'zrange', [`followers:${otherId}`, 0, -1]);
+    }
 }
 
 export default FollowService;

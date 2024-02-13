@@ -60,12 +60,13 @@ class TweetService {
         return Tweet.findAll({
             where: {
                 tags: {
-                    [Op.contains]: [taggedUserId]
+                    [Op.like]: `%${taggedUserId}%`
                 }
             },
             order: [['createdAt', 'DESC']],
         });
     }
+    
 
     async fetchAllTweets(): Promise<Tweet[]> {
         return Tweet.findAll({

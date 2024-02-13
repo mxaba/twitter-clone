@@ -29,6 +29,7 @@ declare module 'fastify' {
         userService: UserService;
         tweetService: TweetService;
         timelineService: TimelineService;
+        followService: FollowService;
     }
 }
 

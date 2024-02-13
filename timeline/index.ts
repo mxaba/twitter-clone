@@ -13,7 +13,7 @@ const plugin: FastifyPluginCallback = async (fastify, opts) => {
             reply.send(err);
         }
     });
-    fastify.get('/', { schema: timelineSchema }, (request, reply) => getTimelineHandler(request, reply, timelineService));
+    fastify.get('/', (request, reply) => getTimelineHandler(request, reply, timelineService));
     fastify.get('/feed', (request, reply) => getPublicFeedHandler(request, reply, timelineService));
 };
 
