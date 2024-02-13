@@ -1,13 +1,18 @@
 const timeline = {
     response: {
         200: {
-            body: {
+            type: 'array',
+            items: {
                 type: 'object',
-                required: [],
-                properties: {},
-                additionalProperties: false,
+                properties: {
+                    id: { type: 'string' },
+                    userId: { type: 'string' },
+                    content: { type: 'string' },
+                    tags: { type: 'string'},
+                    createdAt: { type: 'string'},
+                },
             },
-        }
+        },
     },
 };
 

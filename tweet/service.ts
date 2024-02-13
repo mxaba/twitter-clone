@@ -1,4 +1,4 @@
-import { DataTypes, Model, Sequelize } from 'sequelize';
+import { DataTypes, Model, Op, Sequelize } from 'sequelize';
 
 class Tweet extends Model {
     public id!: string;
@@ -54,6 +54,23 @@ class TweetService {
 
     async addTweet(user: string, content: string, tags: string) {
         return Tweet.create({ userId: user, content: content, tags: tags });
+    }
+
+    async fetchTweetsByTaggedUser(taggedUserId: string): Promise<Tweet[]> {
+        return Tweet.findAll({
+            where: {
+                tags: {
+                    [Op.contains]: [taggedUserId]
+                }
+            },
+            order: [['createdAt', 'DESC']],
+        });
+    }
+
+    async fetchAllTweets(): Promise<Tweet[]> {
+        return Tweet.findAll({
+            order: [['createdAt', 'DESC']],
+        });
     }
 }
 

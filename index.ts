@@ -28,6 +28,7 @@ declare module 'fastify' {
         redis: Redis;
         userService: UserService;
         tweetService: TweetService;
+        timelineService: TimelineService;
     }
 }
 

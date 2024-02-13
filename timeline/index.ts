@@ -1,15 +1,11 @@
-import { FastifyPluginCallback, FastifyRequest, FastifyReply, RouteHandlerMethod } from 'fastify';
+import { FastifyPluginCallback, FastifyRequest, FastifyReply } from 'fastify';
 import timelineSchema from './model';
+import { getUserIdFromToken } from '../utility';
+import TimelineService from './server';
 
-interface CustomRequest extends FastifyRequest {
-    user: {
-        _id: string;
-    };
-    timelineService: any;
-    jwt: any;
-}
 
 const plugin: FastifyPluginCallback = async (fastify, opts) => {
+    const timelineService: TimelineService = fastify.timelineService;
     fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             await request.jwtVerify();
@@ -17,7 +13,8 @@ const plugin: FastifyPluginCallback = async (fastify, opts) => {
             reply.send(err);
         }
     });
-    fastify.get('/', { schema: timelineSchema }, getTimelineHandler);
+    fastify.get('/', { schema: timelineSchema }, (request, reply) => getTimelineHandler(request, reply, timelineService));
+    fastify.get('/feed', (request, reply) => getPublicFeedHandler(request, reply, timelineService));
 };
 
 (plugin as any)[Symbol.for('plugin-meta')] = {
@@ -29,9 +26,23 @@ const plugin: FastifyPluginCallback = async (fastify, opts) => {
     }
 };
 
-const getTimelineHandler: RouteHandlerMethod = async (req, reply) => {
-    const request = req.body as CustomRequest;
-    return request.timelineService.getTimeline(request.user._id);
+const getTimelineHandler = async (request: FastifyRequest, reply: FastifyReply, timelineService: TimelineService) => {
+    const token = request.headers.authorization?.replace('Bearer ', '')
+    if (!token) {
+        reply.code(401).send({ message: 'Invalid or expired token' });
+        return
+    }
+    const userId = getUserIdFromToken(token);
+
+    if (!userId) {
+        reply.code(401).send({ message: 'Invalid or expired token' });
+        return;
+    }
+    return timelineService.getTimeline(userId);
+}
+
+const getPublicFeedHandler = async (request: FastifyRequest, reply: FastifyReply, timelineService: TimelineService) => {
+    return timelineService.getPublicFeed();
 }
 
 export = plugin;
